@@ -1,352 +1,341 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Order Calculator v2.0</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --light-gray: #f4f6f8;
+            --medium-gray: #ddd;
+            --dark-text: #333;
+            --light-text: #fff;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 2em;
+            background-color: var(--light-gray);
+            color: var(--dark-text);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--light-text);
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #1a2533;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1em;
+        }
+        th, td {
+            padding: 12px 8px;
+            border: 1px solid var(--medium-gray);
+            text-align: center;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input[type="text"], input[type="number"] {
+            width: 95%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .guide {
+            font-size: 0.8em;
+            color: var(--primary-color);
+            display: block;
+            margin-top: 4px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 1em;
+            margin: 2em 0;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        button.add-item-btn {
+            background-color: #28a745;
+        }
+        button.add-item-btn:hover {
+            background-color: #218838;
+        }
+        button.remove-item-btn {
+            background-color: var(--danger-color);
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        button.remove-item-btn:hover {
+            background-color: var(--danger-hover);
+        }
+        #results-container {
+            margin-top: 2em;
+            padding: 1.5em;
+            background-color: #e9f5ff;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 5px;
+        }
+        .result-item {
+            margin-bottom: 1.5em;
+            padding-bottom: 1.5em;
+            border-bottom: 1px dashed #ccc;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .result-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #0056b3;
+        }
+        .final-order {
+            font-weight: bold;
+            color: #d9534f;
+            font-size: 1.2em;
+        }
+        .print-only { 
+            display: none; 
+        }
+        @media print {
+            body > *:not(.print-only) {
+                display: none;
+            }
+            .print-only {
+                display: block;
+                padding: 2em;
+            }
+            #print-summary-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14pt;
+            }
+            #print-summary-table th, #print-summary-table td {
+                border: 1px solid #333;
+                padding: 10px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
 
-\f0\fs24 \cf0 <!DOCTYPE html>\
-<html lang="en">\
-<head>\
-    <meta charset="UTF-8">\
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
-    <title>Restaurant Order Calculator v2.0</title>\
-    <style>\
-        :root \{\
-            --primary-color: #007bff;\
-            --primary-hover: #0056b3;\
-            --danger-color: #dc3545;\
-            --danger-hover: #c82333;\
-            --light-gray: #f4f6f8;\
-            --medium-gray: #ddd;\
-            --dark-text: #333;\
-            --light-text: #fff;\
-        \}\
-        body \{\
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;\
-            margin: 0;\
-            padding: 2em;\
-            background-color: var(--light-gray);\
-            color: var(--dark-text);\
-        \}\
-        .container \{\
-            max-width: 1000px;\
-            margin: 0 auto;\
-            background-color: var(--light-text);\
-            padding: 2em;\
-            border-radius: 8px;\
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);\
-        \}\
-        h1, h2 \{\
-            color: #1a2533;\
-            border-bottom: 2px solid #e0e0e0;\
-            padding-bottom: 10px;\
-        \}\
-        table \{\
-            width: 100%;\
-            border-collapse: collapse;\
-            margin-bottom: 1em;\
-        \}\
-        th, td \{\
-            padding: 12px 8px;\
-            border: 1px solid var(--medium-gray);\
-            text-align: center;\
-            vertical-align: top;\
-        \}\
-        th \{\
-            background-color: #f2f2f2;\
-        \}\
-        input[type="text"], input[type="number"] \{\
-            width: 95%;\
-            padding: 8px;\
-            border-radius: 4px;\
-            border: 1px solid #ccc;\
-            box-sizing: border-box;\
-            text-align: center;\
-        \}\
-        .guide \{\
-            font-size: 0.8em;\
-            color: var(--primary-color);\
-            display: block;\
-            margin-top: 4px;\
-        \}\
-        .button-container \{\
-            display: flex;\
-            justify-content: center;\
-            gap: 1em;\
-            margin: 2em 0;\
-        \}\
-        button \{\
-            background-color: var(--primary-color);\
-            color: var(--light-text);\
-            padding: 12px 25px;\
-            border: none;\
-            border-radius: 5px;\
-            font-size: 16px;\
-            cursor: pointer;\
-            transition: background-color 0.3s;\
-        \}\
-        button:hover \{\
-            background-color: var(--primary-hover);\
-        \}\
-        button.add-item-btn \{\
-            background-color: #28a745;\
-        \}\
-        button.add-item-btn:hover \{\
-            background-color: #218838;\
-        \}\
-        button.remove-item-btn \{\
-            background-color: var(--danger-color);\
-            padding: 8px 12px;\
-            font-size: 14px;\
-        \}\
-        button.remove-item-btn:hover \{\
-            background-color: var(--danger-hover);\
-        \}\
-        #results-container \{\
-            margin-top: 2em;\
-            padding: 1.5em;\
-            background-color: #e9f5ff;\
-            border-left: 5px solid var(--primary-color);\
-            border-radius: 5px;\
-        \}\
-        .result-item \{\
-            margin-bottom: 1.5em; padding-bottom: 1.5em;\
-            border-bottom: 1px dashed #ccc;\
-        \}\
-        .result-item:last-child \{\
-            border-bottom: none; margin-bottom: 0; padding-bottom: 0;\
-        \}\
-        .result-title \{\
-            font-weight: bold; font-size: 1.2em; color: #0056b3;\
-        \}\
-        .final-order \{\
-            font-weight: bold; color: #d9534f; font-size: 1.2em;\
-        \}\
-        .print-only \{ \
-            display: none; \
-        \}\
-\
-        @media print \{\
-            body > *:not(.print-only) \{\
-                display: none;\
-            \}\
-            .print-only \{\
-                display: block;\
-                padding: 2em;\
-            \}\
-            #print-summary-table \{\
-                width: 100%;\
-                border-collapse: collapse;\
-                font-size: 14pt;\
-            \}\
-            #print-summary-table th, #print-summary-table td \{\
-                border: 1px solid #333;\
-                padding: 10px;\
-                text-align: left;\
-            \}\
-        \}\
-    </style>\
-</head>\
-<body>\
-\
-<div class="container">\
-    <h1>Restaurant Order Calculator v2.0</h1>\
-\
-    <h2>Step 1: Update Stock & Predictions</h2>\
-    <p>Adjust values as needed. All data will be saved automatically when you calculate the order.</p>\
-    \
-    <table id="inventory-table">\
-        <thead>\
-            <tr>\
-                <th>Item Name</th>\
-                <th>Received Today</th>\
-                <th>In Store</th>\
-                <th>Coming Tomorrow</th>\
-                <th>Predicted Use Today</th>\
-                <th>Predicted Use Tomorrow</th>\
-                <th>Target Stock</th>\
-                <th>Actions</th>\
-            </tr>\
-        </thead>\
-        <tbody>\
-            </tbody>\
-    </table>\
-    <button id="add-item-btn" class="add-item-btn">+ Add New Item</button>\
-\
-    <div class="button-container">\
-        <button id="calculate-btn">Calculate & Save Order</button>\
-    </div>\
-\
-    <div id="results-container" style="display: none;">\
-        <h2>Step 2: Recommended Order</h2>\
-        <div id="results-output"></div>\
-        <div class="button-container">\
-             <button id="print-btn">Print Order</button>\
-        </div>\
-    </div>\
-</div>\
-\
-<div id="print-summary" class="print-only">\
-    </div>\
-\
-\
-<script>\
-document.addEventListener('DOMContentLoaded', function() \{\
-    const tableBody = document.querySelector('#inventory-table tbody');\
-    const addItemBtn = document.getElementById('add-item-btn');\
-    const calculateBtn = document.getElementById('calculate-btn');\
-    const printBtn = document.getElementById('print-btn');\
-    const resultsContainer = document.getElementById('results-container');\
-    const resultsOutput = document.getElementById('results-output');\
-    const printSummary = document.getElementById('print-summary');\
-\
-    // --- Data Management ---\
-    const initialItems = [\
-        \{ id: 1624531200001, name: 'Item 4', received: 14, inStore: 11, coming: 15, useToday: 18, useTomorrow: 19, target: 21 \},\
-        \{ id: 1624531200002, name: 'Item S', received: 11, inStore: 3.5, coming: 8, useToday: 11.5, useTomorrow: 10, target: 13 \},\
-        \{ id: 1624531200003, name: 'Item L', received: 5, inStore: 8.5, coming: 5, useToday: 6.5, useTomorrow: 7, target: 10 \},\
-        \{ id: 1624531200004, name: 'Item S2', received: 3, inStore: 2.5, coming: 3, useToday: 3.5, useTomorrow: 3.5, target: 5.5 \}\
-    ];\
-    let items = JSON.parse(localStorage.getItem('inventoryState')) || initialItems;\
-    let usageHistory = JSON.parse(localStorage.getItem('usageHistory')) || \{\};\
-\
-    // --- Core Functions ---\
-    function saveState() \{\
-        const currentItems = [];\
-        const rows = document.querySelectorAll('#inventory-table tbody tr');\
-        rows.forEach(row => \{\
-            const item = \{\
-                id: parseInt(row.dataset.id),\
-                name: row.querySelector('.item-name').value,\
-                received: parseFloat(row.querySelector('.item-received').value) || 0,\
-                inStore: parseFloat(row.querySelector('.item-instore').value) || 0,\
-                coming: parseFloat(row.querySelector('.item-coming').value) || 0,\
-                useToday: parseFloat(row.querySelector('.item-use-today').value) || 0,\
-                useTomorrow: parseFloat(row.querySelector('.item-use-tomorrow').value) || 0,\
-                target: parseFloat(row.querySelector('.item-target').value) || 0\
-            \};\
-            currentItems.push(item);\
-            // Save usage data for guide predictions\
-            if (!usageHistory[item.name]) usageHistory[item.name] = [];\
-            usageHistory[item.name].push(item.useToday, item.useTomorrow);\
-            if (usageHistory[item.name].length > 10) usageHistory[item.name] = usageHistory[item.name].slice(-10);\
-        \});\
-        localStorage.setItem('inventoryState', JSON.stringify(currentItems));\
-        localStorage.setItem('usageHistory', JSON.stringify(usageHistory));\
-        items = currentItems; // Update global items array\
-    \}\
-\
-    function renderTable() \{\
-        tableBody.innerHTML = '';\
-        items.forEach(item => \{\
-            const guide = getGuidePrediction(item.name);\
-            const rowHTML = `\
-                <tr data-id="$\{item.id\}">\
-                    <td><input type="text" class="item-name" value="$\{item.name\}"></td>\
-                    <td><input type="number" step="0.5" class="item-received" value="$\{item.received\}"></td>\
-                    <td><input type="number" step="0.5" class="item-instore" value="$\{item.inStore\}"></td>\
-                    <td><input type="number" step="0.5" class="item-coming" value="$\{item.coming\}"></td>\
-                    <td>\
-                        <input type="number" step="0.5" class="item-use-today" value="$\{item.useToday\}">\
-                        <span class="guide">$\{guide\}</span>\
-                    </td>\
-                    <td>\
-                        <input type="number" step="0.5" class="item-use-tomorrow" value="$\{item.useTomorrow\}">\
-                        <span class="guide">$\{guide\}</span>\
-                    </td>\
-                    <td><input type="number" step="0.5" class="item-target" value="$\{item.target\}"></td>\
-                    <td><button class="remove-item-btn" data-id="$\{item.id\}">Remove</button></td>\
-                </tr>\
-            `;\
-            tableBody.insertAdjacentHTML('beforeend', rowHTML);\
-        \});\
-    \}\
-\
-    function getGuidePrediction(itemName) \{\
-        if (!usageHistory[itemName] || usageHistory[itemName].length === 0) return "No history";\
-        const history = usageHistory[itemName].filter(val => val > 0);\
-        if(history.length === 0) return "No history";\
-        const sum = history.reduce((a, b) => a + b, 0);\
-        return `Avg: $\{(sum / history.length).toFixed(1)\}`;\
-    \}\
-\
-    // --- Event Listeners ---\
-    addItemBtn.addEventListener('click', () => \{\
-        const newItem = \{\
-            id: Date.now(), // Unique ID using timestamp\
-            name: 'New Item',\
-            received: 0, inStore: 0, coming: 0, useToday: 0, useTomorrow: 0, target: 0\
-        \};\
-        items.push(newItem);\
-        renderTable();\
-    \});\
-\
-    tableBody.addEventListener('click', (e) => \{\
-        if (e.target && e.target.classList.contains('remove-item-btn')) \{\
-            const idToRemove = parseInt(e.target.dataset.id);\
-            if (confirm('Are you sure you want to remove this item?')) \{\
-                items = items.filter(item => item.id !== idToRemove);\
-                renderTable();\
-            \}\
-        \}\
-    \});\
-\
-    calculateBtn.addEventListener('click', () => \{\
-        saveState(); // Save the entire state first\
-        resultsOutput.innerHTML = '';\
-        \
-        items.forEach(item => \{\
-            const totalToday = item.received + item.inStore;\
-            const leftoverToday = totalToday - item.useToday;\
-            const openingTomorrow = leftoverToday + item.coming;\
-            const leftoverTomorrow = openingTomorrow - item.useTomorrow;\
-            let orderAmount = item.target - leftoverTomorrow;\
-            if (orderAmount < 0) orderAmount = 0;\
-\
-            const resultHTML = `\
-                <div class="result-item" data-name="$\{item.name\}" data-order="$\{orderAmount.toFixed(1)\}">\
-                    <p class="result-title">$\{item.name\}</p>\
-                    <p>Total for today: $\{item.received\} + $\{item.inStore\} = <strong>$\{totalToday.toFixed(1)\}</strong></p>\
-                    <p>Leftover after today: $\{totalToday.toFixed(1)\} - $\{item.useToday\} = <strong>$\{leftoverToday.toFixed(1)\}</strong></p>\
-                    <p>Opening stock tomorrow: $\{leftoverToday.toFixed(1)\} + $\{item.coming\} = <strong>$\{openingTomorrow.toFixed(1)\}</strong></p>\
-                    <p>Projected EOD tomorrow: $\{openingTomorrow.toFixed(1)\} - $\{item.useTomorrow\} = <strong>$\{leftoverTomorrow.toFixed(1)\}</strong></p>\
-                    <p class="final-order">To reach target of $\{item.target\}, order: $\{orderAmount.toFixed(1)\}</p>\
-                </div>\
-            `;\
-            resultsOutput.innerHTML += resultHTML;\
-        \});\
-\
-        resultsContainer.style.display = 'block';\
-        renderTable(); // Re-render table to show updated guide predictions\
-    \});\
-\
-    printBtn.addEventListener('click', () => \{\
-        const orderItems = document.querySelectorAll('.result-item');\
-        let summaryHTML = `\
-            <h1>Order Summary</h1>\
-            <p>Date: $\{new Date().toLocaleDateString('en-NZ')\}</p>\
-            <table id="print-summary-table">\
-                <thead><tr><th>Item Name</th><th>Quantity to Order</th></tr></thead>\
-                <tbody>\
-        `;\
-        orderItems.forEach(item => \{\
-            const name = item.dataset.name;\
-            const order = item.dataset.order;\
-            if (parseFloat(order) > 0) \{ // Only add items that need ordering\
-                 summaryHTML += `<tr><td>$\{name\}</td><td>$\{order\}</td></tr>`;\
-            \}\
-        \});\
-        summaryHTML += `</tbody></table>`;\
-        \
-        printSummary.innerHTML = summaryHTML;\
-        window.print();\
-    \});\
-\
-    // --- Initial Load ---\
-    renderTable();\
-\});\
-</script>\
-\
-</body>\
-</html>}
+<div class="container">
+    <h1>Restaurant Order Calculator v2.0</h1>
+    <h2>Step 1: Update Stock & Predictions</h2>
+    <p>Adjust values as needed. All data will be saved automatically when you calculate the order.</p>
+    <table id="inventory-table">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Received Today</th>
+                <th>In Store</th>
+                <th>Coming Tomorrow</th>
+                <th>Predicted Use Today</th>
+                <th>Predicted Use Tomorrow</th>
+                <th>Target Stock</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <button id="add-item-btn" class="add-item-btn">+ Add New Item</button>
+    <div class="button-container">
+        <button id="calculate-btn">Calculate & Save Order</button>
+    </div>
+    <div id="results-container" style="display: none;">
+        <h2>Step 2: Recommended Order</h2>
+        <div id="results-output"></div>
+        <div class="button-container">
+             <button id="print-btn">Print Order</button>
+        </div>
+    </div>
+</div>
+<div id="print-summary" class="print-only"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.querySelector('#inventory-table tbody');
+    const addItemBtn = document.getElementById('add-item-btn');
+    const calculateBtn = document.getElementById('calculate-btn');
+    const printBtn = document.getElementById('print-btn');
+    const resultsContainer = document.getElementById('results-container');
+    const resultsOutput = document.getElementById('results-output');
+    const printSummary = document.getElementById('print-summary');
+
+    // --- Data Management ---
+    const initialItems = [
+        { id: 1624531200001, name: 'Item 4', received: 14, inStore: 11, coming: 15, useToday: 18, useTomorrow: 19, target: 21 },
+        { id: 1624531200002, name: 'Item S', received: 11, inStore: 3.5, coming: 8, useToday: 11.5, useTomorrow: 10, target: 13 },
+        { id: 1624531200003, name: 'Item L', received: 5, inStore: 8.5, coming: 5, useToday: 6.5, useTomorrow: 7, target: 10 },
+        { id: 1624531200004, name: 'Item S2', received: 3, inStore: 2.5, coming: 3, useToday: 3.5, useTomorrow: 3.5, target: 5.5 }
+    ];
+    let items = JSON.parse(localStorage.getItem('inventoryState')) || initialItems;
+    let usageHistory = JSON.parse(localStorage.getItem('usageHistory')) || {};
+
+    // --- Core Functions ---
+    function saveState() {
+        const currentItems = [];
+        const rows = document.querySelectorAll('#inventory-table tbody tr');
+        rows.forEach(row => {
+            const item = {
+                id: parseInt(row.dataset.id),
+                name: row.querySelector('.item-name').value,
+                received: parseFloat(row.querySelector('.item-received').value) || 0,
+                inStore: parseFloat(row.querySelector('.item-instore').value) || 0,
+                coming: parseFloat(row.querySelector('.item-coming').value) || 0,
+                useToday: parseFloat(row.querySelector('.item-use-today').value) || 0,
+                useTomorrow: parseFloat(row.querySelector('.item-use-tomorrow').value) || 0,
+                target: parseFloat(row.querySelector('.item-target').value) || 0
+            };
+            currentItems.push(item);
+            // Save usage data for guide predictions
+            if (!usageHistory[item.name]) usageHistory[item.name] = [];
+            usageHistory[item.name].push(item.useToday, item.useTomorrow);
+            if (usageHistory[item.name].length > 10) usageHistory[item.name] = usageHistory[item.name].slice(-10);
+        });
+        localStorage.setItem('inventoryState', JSON.stringify(currentItems));
+        localStorage.setItem('usageHistory', JSON.stringify(usageHistory));
+        items = currentItems; // Update global items array
+    }
+
+    function renderTable() {
+        tableBody.innerHTML = '';
+        items.forEach(item => {
+            const guide = getGuidePrediction(item.name);
+            const rowHTML = `
+                <tr data-id="${item.id}">
+                    <td><input type="text" class="item-name" value="${item.name}"></td>
+                    <td><input type="number" step="0.5" class="item-received" value="${item.received}"></td>
+                    <td><input type="number" step="0.5" class="item-instore" value="${item.inStore}"></td>
+                    <td><input type="number" step="0.5" class="item-coming" value="${item.coming}"></td>
+                    <td>
+                        <input type="number" step="0.5" class="item-use-today" value="${item.useToday}">
+                        <span class="guide">${guide}</span>
+                    </td>
+                    <td>
+                        <input type="number" step="0.5" class="item-use-tomorrow" value="${item.useTomorrow}">
+                        <span class="guide">${guide}</span>
+                    </td>
+                    <td><input type="number" step="0.5" class="item-target" value="${item.target}"></td>
+                    <td><button class="remove-item-btn" data-id="${item.id}">Remove</button></td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', rowHTML);
+        });
+    }
+
+    function getGuidePrediction(itemName) {
+        if (!usageHistory[itemName] || usageHistory[itemName].length === 0) return "No history";
+        const history = usageHistory[itemName].filter(val => val > 0);
+        if(history.length === 0) return "No history";
+        const sum = history.reduce((a, b) => a + b, 0);
+        return `Avg: ${(sum / history.length).toFixed(1)}`;
+    }
+
+    // --- Event Listeners ---
+    addItemBtn.addEventListener('click', () => {
+        const newItem = {
+            id: Date.now(), // Unique ID using timestamp
+            name: 'New Item',
+            received: 0, inStore: 0, coming: 0, useToday: 0, useTomorrow: 0, target: 0
+        };
+        items.push(newItem);
+        renderTable();
+    });
+
+    tableBody.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('remove-item-btn')) {
+            const idToRemove = parseInt(e.target.dataset.id);
+            if (confirm('Are you sure you want to remove this item?')) {
+                items = items.filter(item => item.id !== idToRemove);
+                renderTable();
+            }
+        }
+    });
+
+    calculateBtn.addEventListener('click', () => {
+        saveState(); // Save the entire state first
+        resultsOutput.innerHTML = '';
+        
+        items.forEach(item => {
+            const totalToday = item.received + item.inStore;
+            const leftoverToday = totalToday - item.useToday;
+            const openingTomorrow = leftoverToday + item.coming;
+            const leftoverTomorrow = openingTomorrow - item.useTomorrow;
+            let orderAmount = item.target - leftoverTomorrow;
+            if (orderAmount < 0) orderAmount = 0;
+
+            const resultHTML = `
+                <div class="result-item" data-name="${item.name}" data-order="${orderAmount.toFixed(1)}">
+                    <p class="result-title">${item.name}</p>
+                    <p>Total for today: ${item.received} + ${item.inStore} = <strong>${totalToday.toFixed(1)}</strong></p>
+                    <p>Leftover after today: ${totalToday.toFixed(1)} - ${item.useToday} = <strong>${leftoverToday.toFixed(1)}</strong></p>
+                    <p>Opening stock tomorrow: ${leftoverToday.toFixed(1)} + ${item.coming} = <strong>${openingTomorrow.toFixed(1)}</strong></p>
+                    <p>Projected EOD tomorrow: ${openingTomorrow.toFixed(1)} - ${item.useTomorrow} = <strong>${leftoverTomorrow.toFixed(1)}</strong></p>
+                    <p class="final-order">To reach target of ${item.target}, order: ${orderAmount.toFixed(1)}</p>
+                </div>
+            `;
+            resultsOutput.innerHTML += resultHTML;
+        });
+
+        resultsContainer.style.display = 'block';
+        renderTable(); // Re-render table to show updated guide predictions
+    });
+
+    printBtn.addEventListener('click', () => {
+        const orderItems = document.querySelectorAll('.result-item');
+        let summaryHTML = `
+            <h1>Order Summary</h1>
+            <p>Date: ${new Date().toLocaleDateString('en-NZ')}</p>
+            <table id="print-summary-table">
+                <thead><tr><th>Item Name</th><th>Quantity to Order</th></tr></thead>
+                <tbody>
+        `;
+        orderItems.forEach(item => {
+            const name = item.dataset.name;
+            const order = item.dataset.order;
+            if (parseFloat(order) > 0) { // Only add items that need ordering
+                 summaryHTML += `<tr><td>${name}</td><td>${order}</td></tr>`;
+            }
+        });
+        summaryHTML += `</tbody></table>`;
+        
+        printSummary.innerHTML = summaryHTML;
+        window.print();
+    });
+
+    // --- Initial Load ---
+    renderTable();
+});
+</script>
+</body>
+</html>
