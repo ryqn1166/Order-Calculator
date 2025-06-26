@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Order Calculator v2.0</title>
+    <title>Order Calculator v2.0</title>
     <style>
         :root {
             --primary-color: #007bff;
             --primary-hover: #0056b3;
             --danger-color: #dc3545;
             --danger-hover: #c82333;
+            --success-color: #28a745;
+            --success-hover: #218838;
+            --warning-color: #ffb400;
+            --warning-hover: #e6a100;
             --light-gray: #f4f6f8;
             --medium-gray: #ddd;
             --dark-text: #333;
             --light-text: #fff;
         }
+        html { font-size: 15px; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
@@ -30,83 +35,147 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        h1, h2 {
+        h1 {
             color: #1a2533;
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
+            font-size: 1.7rem;
+        }
+        h2 {
+            color: #1a2533;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            font-size: 1.15rem;
+        }
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 1em;
+            table-layout: fixed;
+            font-size: 0.97rem;
+            min-width: 850px;
         }
         th, td {
-            padding: 12px 8px;
+            padding: 7px 3px;
             border: 1px solid var(--medium-gray);
             text-align: center;
-            vertical-align: top;
+            vertical-align: middle;
+            width: 12.5%;
+            word-break: break-word;
         }
         th {
             background-color: #f2f2f2;
+            font-size: 1.03rem;
+            font-weight: 600;
         }
-        input[type="text"], input[type="number"] {
-            width: 95%;
-            padding: 8px;
+        label {
+            font-size: 0.97em;
+            margin-bottom: 2px;
+            display: block;
+            text-align: left;
+        }
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+        input[type="text"], input[type="number"], select.day-select {
+            width: 92%;
+            padding: 5px 2px;
             border-radius: 4px;
             border: 1px solid #ccc;
             box-sizing: border-box;
             text-align: center;
+            font-size: 0.97rem;
+        }
+        input[type="number"]:invalid {
+            border-color: var(--danger-color);
+            outline: none;
+        }
+        select.day-select {
+            margin-bottom: 3px;
         }
         .guide {
-            font-size: 0.8em;
+            font-size: 0.82em;
             color: var(--primary-color);
             display: block;
-            margin-top: 4px;
+            margin-top: 3px;
         }
-        .button-container {
+        .button-container, .bulk-actions {
             display: flex;
             justify-content: center;
             gap: 1em;
             margin: 2em 0;
+            flex-wrap: wrap;
         }
         button {
             background-color: var(--primary-color);
             color: var(--light-text);
-            padding: 12px 25px;
+            padding: 7px 14px;
             border: none;
             border-radius: 5px;
-            font-size: 16px;
+            font-size: 0.98rem;
             cursor: pointer;
             transition: background-color 0.3s;
+        }
+        button:focus {
+            outline: 2px solid var(--primary-hover);
         }
         button:hover {
             background-color: var(--primary-hover);
         }
         button.add-item-btn {
-            background-color: #28a745;
+            background-color: var(--success-color);
         }
         button.add-item-btn:hover {
-            background-color: #218838;
+            background-color: var(--success-hover);
         }
         button.remove-item-btn {
             background-color: var(--danger-color);
-            padding: 8px 12px;
-            font-size: 14px;
+            padding: 5px 8px;
         }
         button.remove-item-btn:hover {
             background-color: var(--danger-hover);
         }
+        button.undo-btn {
+            background-color: var(--warning-color);
+            color: #333;
+            padding: 5px 8px;
+            margin-left: 5px;
+        }
+        button.undo-btn:hover {
+            background-color: var(--warning-hover);
+        }
+        button.bulk-action-btn {
+            background-color: #888;
+            color: #fff;
+            font-size: 0.96rem;
+        }
+        button.bulk-action-btn:hover {
+            background-color: #333;
+        }
         #results-container {
             margin-top: 2em;
-            padding: 1.5em;
+            padding: 1em;
             background-color: #e9f5ff;
             border-left: 5px solid var(--primary-color);
             border-radius: 5px;
+            font-size: 0.97rem;
         }
         .result-item {
-            margin-bottom: 1.5em;
-            padding-bottom: 1.5em;
+            margin-bottom: 0.9em;
+            padding-bottom: 0.9em;
             border-bottom: 1px dashed #ccc;
+            font-size: 0.97rem;
         }
         .result-item:last-child {
             border-bottom: none;
@@ -115,18 +184,50 @@
         }
         .result-title {
             font-weight: bold;
-            font-size: 1.2em;
+            font-size: 1.06em;
             color: #0056b3;
         }
         .final-order {
             font-weight: bold;
             color: #d9534f;
-            font-size: 1.2em;
+            font-size: 1.06em;
         }
         .print-only { 
             display: none; 
         }
+        #order-working-table th, #order-working-table td {
+            padding: 6px 2px;
+            font-size: 0.97em;
+        }
+        .col-select-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #toast {
+            display: none;
+            position: fixed;
+            left: 50%;
+            bottom: 2em;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 0.7em 1.4em;
+            border-radius: 6px;
+            font-size: 1em;
+            opacity: 0.92;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        @media (max-width: 700px) {
+            html { font-size: 12px; }
+            .container { padding: 0.7em; }
+            .table-wrapper { overflow-x: auto; }
+            th, td { font-size: 0.93em; padding: 4px 2px; }
+            input, select { font-size: 0.93em; }
+        }
         @media print {
+            html { font-size: 13px; }
             body > *:not(.print-only) {
                 display: none;
             }
@@ -137,205 +238,439 @@
             #print-summary-table {
                 width: 100%;
                 border-collapse: collapse;
-                font-size: 14pt;
+                font-size: 12pt;
             }
             #print-summary-table th, #print-summary-table td {
                 border: 1px solid #333;
-                padding: 10px;
+                padding: 7px;
                 text-align: left;
             }
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Restaurant Order Calculator v2.0</h1>
-    <h2>Step 1: Update Stock & Predictions</h2>
+<div class="container" role="main">
+    <h1>Order Calculator</h1>
     <p>Adjust values as needed. All data will be saved automatically when you calculate the order.</p>
-    <table id="inventory-table">
+    <div class="bulk-actions">
+        <button id="export-btn" class="bulk-action-btn" aria-label="Export data">Export Data</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" />
+        <button id="import-btn" class="bulk-action-btn" aria-label="Import data">Import Data</button>
+        <button id="reset-btn" class="bulk-action-btn" aria-label="Reset to default">Reset to Default</button>
+    </div>
+    <div class="table-wrapper" tabindex="0">
+    <table id="inventory-table" aria-label="Order inventory table">
         <thead>
             <tr>
                 <th>Item Name</th>
                 <th>Received Today</th>
                 <th>In Store</th>
                 <th>Coming Tomorrow</th>
-                <th>Predicted Use Today</th>
-                <th>Predicted Use Tomorrow</th>
+                <th>
+                    <div class="col-select-wrapper">
+                        <label for="col-day-select-today">Day</label>
+                        <select id="col-day-select-today" class="day-select" aria-label="Select day for predicted use today"></select>
+                        Predicted Use Today
+                    </div>
+                </th>
+                <th>
+                    <div class="col-select-wrapper">
+                        <label for="col-day-select-tomorrow">Day</label>
+                        <select id="col-day-select-tomorrow" class="day-select" aria-label="Select day for predicted use tomorrow"></select>
+                        Predicted Use Tomorrow
+                    </div>
+                </th>
                 <th>Target Stock</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
-    <button id="add-item-btn" class="add-item-btn">+ Add New Item</button>
+    </div>
+    <button id="add-item-btn" class="add-item-btn" aria-label="Add new item">+ Add New Item</button>
     <div class="button-container">
-        <button id="calculate-btn">Calculate & Save Order</button>
+        <button id="calculate-btn" aria-label="Calculate and save order">Calculate & Save Order</button>
     </div>
     <div id="results-container" style="display: none;">
         <h2>Step 2: Recommended Order</h2>
+        <div id="order-working-container" style="margin-bottom:2em;"></div>
         <div id="results-output"></div>
         <div class="button-container">
-             <button id="print-btn">Print Order</button>
+             <button id="print-btn" aria-label="Print order">Print Order</button>
         </div>
     </div>
 </div>
+<div id="toast"></div>
 <div id="print-summary" class="print-only"></div>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const tableBody = document.querySelector('#inventory-table tbody');
-    const addItemBtn = document.getElementById('add-item-btn');
-    const calculateBtn = document.getElementById('calculate-btn');
-    const printBtn = document.getElementById('print-btn');
-    const resultsContainer = document.getElementById('results-container');
-    const resultsOutput = document.getElementById('results-output');
-    const printSummary = document.getElementById('print-summary');
-
-    // --- Data Management ---
-    const initialItems = [
-        { id: 1624531200001, name: 'Item 4', received: 14, inStore: 11, coming: 15, useToday: 18, useTomorrow: 19, target: 21 },
-        { id: 1624531200002, name: 'Item S', received: 11, inStore: 3.5, coming: 8, useToday: 11.5, useTomorrow: 10, target: 13 },
-        { id: 1624531200003, name: 'Item L', received: 5, inStore: 8.5, coming: 5, useToday: 6.5, useTomorrow: 7, target: 10 },
-        { id: 1624531200004, name: 'Item S2', received: 3, inStore: 2.5, coming: 3, useToday: 3.5, useTomorrow: 3.5, target: 5.5 }
-    ];
-    let items = JSON.parse(localStorage.getItem('inventoryState')) || initialItems;
-    let usageHistory = JSON.parse(localStorage.getItem('usageHistory')) || {};
-
-    // --- Core Functions ---
-    function saveState() {
-        const currentItems = [];
-        const rows = document.querySelectorAll('#inventory-table tbody tr');
-        rows.forEach(row => {
-            const item = {
-                id: parseInt(row.dataset.id),
-                name: row.querySelector('.item-name').value,
-                received: parseFloat(row.querySelector('.item-received').value) || 0,
-                inStore: parseFloat(row.querySelector('.item-instore').value) || 0,
-                coming: parseFloat(row.querySelector('.item-coming').value) || 0,
-                useToday: parseFloat(row.querySelector('.item-use-today').value) || 0,
-                useTomorrow: parseFloat(row.querySelector('.item-use-tomorrow').value) || 0,
-                target: parseFloat(row.querySelector('.item-target').value) || 0
-            };
-            currentItems.push(item);
-            // Save usage data for guide predictions
-            if (!usageHistory[item.name]) usageHistory[item.name] = [];
-            usageHistory[item.name].push(item.useToday, item.useTomorrow);
-            if (usageHistory[item.name].length > 10) usageHistory[item.name] = usageHistory[item.name].slice(-10);
+/** --- Utilities: Toasts, Debounce, Validation --- */
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 2000);
+}
+function debounce(fn, ms=350) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), ms);
+    };
+}
+function validateNumberInput(input) {
+    if (parseFloat(input.value) < 0) input.value = 0;
+}
+/** --- Data & State --- */
+const initialItems = [
+    { id: 1624531200001, name: '4in', received: 14, inStore: 11, coming: 15, useToday: 18, useTomorrow: 19, target: 21 },
+    { id: 1624531200002, name: '5in', received: 11, inStore: 3.5, coming: 8, useToday: 11.5, useTomorrow: 10, target: 13 },
+    { id: 1624531200003, name: 'Long', received: 5, inStore: 8.5, coming: 5, useToday: 6.5, useTomorrow: 7, target: 10 },
+    { id: 1624531200004, name: 'Prem', received: 3, inStore: 2.5, coming: 3, useToday: 3.5, useTomorrow: 3.5, target: 5.5 }
+];
+const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+let items = [];
+let usageHistory = {};
+let usagePerDay = {};
+let undoStack = [], redoStack = [];
+let selectedDayToday = daysOfWeek[new Date().getDay()];
+let selectedDayTomorrow = daysOfWeek[(new Date().getDay()+1)%7];
+/** --- Storage Handling --- */
+function loadState() {
+    items = JSON.parse(localStorage.getItem('inventoryState')) || JSON.parse(JSON.stringify(initialItems));
+    usageHistory = JSON.parse(localStorage.getItem('usageHistory')) || {};
+    usagePerDay = JSON.parse(localStorage.getItem('usagePerDay')) || {};
+}
+function saveState(pushUndo=true) {
+    if (pushUndo) {
+        undoStack.push({
+            items: JSON.stringify(items),
+            usagePerDay: JSON.stringify(usagePerDay),
+            usageHistory: JSON.stringify(usageHistory)
         });
-        localStorage.setItem('inventoryState', JSON.stringify(currentItems));
-        localStorage.setItem('usageHistory', JSON.stringify(usageHistory));
-        items = currentItems; // Update global items array
+        if (undoStack.length > 20) undoStack.shift();
+        redoStack = [];
     }
-
-    function renderTable() {
-        tableBody.innerHTML = '';
-        items.forEach(item => {
-            const guide = getGuidePrediction(item.name);
-            const rowHTML = `
-                <tr data-id="${item.id}">
-                    <td><input type="text" class="item-name" value="${item.name}"></td>
-                    <td><input type="number" step="0.5" class="item-received" value="${item.received}"></td>
-                    <td><input type="number" step="0.5" class="item-instore" value="${item.inStore}"></td>
-                    <td><input type="number" step="0.5" class="item-coming" value="${item.coming}"></td>
-                    <td>
-                        <input type="number" step="0.5" class="item-use-today" value="${item.useToday}">
-                        <span class="guide">${guide}</span>
-                    </td>
-                    <td>
-                        <input type="number" step="0.5" class="item-use-tomorrow" value="${item.useTomorrow}">
-                        <span class="guide">${guide}</span>
-                    </td>
-                    <td><input type="number" step="0.5" class="item-target" value="${item.target}"></td>
-                    <td><button class="remove-item-btn" data-id="${item.id}">Remove</button></td>
-                </tr>
-            `;
-            tableBody.insertAdjacentHTML('beforeend', rowHTML);
-        });
-    }
-
-    function getGuidePrediction(itemName) {
-        if (!usageHistory[itemName] || usageHistory[itemName].length === 0) return "No history";
-        const history = usageHistory[itemName].filter(val => val > 0);
-        if(history.length === 0) return "No history";
-        const sum = history.reduce((a, b) => a + b, 0);
-        return `Avg: ${(sum / history.length).toFixed(1)}`;
-    }
-
-    // --- Event Listeners ---
-    addItemBtn.addEventListener('click', () => {
-        const newItem = {
-            id: Date.now(), // Unique ID using timestamp
-            name: 'New Item',
-            received: 0, inStore: 0, coming: 0, useToday: 0, useTomorrow: 0, target: 0
-        };
-        items.push(newItem);
+    localStorage.setItem('inventoryState', JSON.stringify(items));
+    localStorage.setItem('usageHistory', JSON.stringify(usageHistory));
+    localStorage.setItem('usagePerDay', JSON.stringify(usagePerDay));
+    showToast("Saved.");
+}
+function restoreState(state) {
+    items = JSON.parse(state.items);
+    usagePerDay = JSON.parse(state.usagePerDay);
+    usageHistory = JSON.parse(state.usageHistory);
+    saveState(false);
+    renderTable();
+    showToast("Undo complete.");
+}
+function resetToDefault() {
+    items = JSON.parse(JSON.stringify(initialItems));
+    usageHistory = {};
+    usagePerDay = {};
+    saveState();
+    renderTable();
+    showToast("Reset to default.");
+}
+/** --- Undo/Redo --- */
+function undo() {
+    if (undoStack.length === 0) return showToast("Nothing to undo!");
+    const last = undoStack.pop();
+    redoStack.push({
+        items: JSON.stringify(items),
+        usagePerDay: JSON.stringify(usagePerDay),
+        usageHistory: JSON.stringify(usageHistory)
+    });
+    restoreState(last);
+}
+function redo() {
+    if (redoStack.length === 0) return showToast("Nothing to redo!");
+    const next = redoStack.pop();
+    undoStack.push({
+        items: JSON.stringify(items),
+        usagePerDay: JSON.stringify(usagePerDay),
+        usageHistory: JSON.stringify(usageHistory)
+    });
+    restoreState(next);
+}
+/** --- Import/Export --- */
+function exportData() {
+    const data = {
+        items, usageHistory, usagePerDay
+    };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type: "application/json"});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "order_data.json";
+    a.click();
+}
+function importData(json) {
+    try {
+        const data = JSON.parse(json);
+        if (!Array.isArray(data.items)) throw new Error();
+        items = data.items;
+        usageHistory = data.usageHistory || {};
+        usagePerDay = data.usagePerDay || {};
+        saveState();
         renderTable();
-    });
-
-    tableBody.addEventListener('click', (e) => {
-        if (e.target && e.target.classList.contains('remove-item-btn')) {
-            const idToRemove = parseInt(e.target.dataset.id);
-            if (confirm('Are you sure you want to remove this item?')) {
-                items = items.filter(item => item.id !== idToRemove);
-                renderTable();
-            }
-        }
-    });
-
-    calculateBtn.addEventListener('click', () => {
-        saveState(); // Save the entire state first
-        resultsOutput.innerHTML = '';
-        
-        items.forEach(item => {
-            const totalToday = item.received + item.inStore;
-            const leftoverToday = totalToday - item.useToday;
-            const openingTomorrow = leftoverToday + item.coming;
-            const leftoverTomorrow = openingTomorrow - item.useTomorrow;
-            let orderAmount = item.target - leftoverTomorrow;
-            if (orderAmount < 0) orderAmount = 0;
-
-            const resultHTML = `
-                <div class="result-item" data-name="${item.name}" data-order="${orderAmount.toFixed(1)}">
-                    <p class="result-title">${item.name}</p>
-                    <p>Total for today: ${item.received} + ${item.inStore} = <strong>${totalToday.toFixed(1)}</strong></p>
-                    <p>Leftover after today: ${totalToday.toFixed(1)} - ${item.useToday} = <strong>${leftoverToday.toFixed(1)}</strong></p>
-                    <p>Opening stock tomorrow: ${leftoverToday.toFixed(1)} + ${item.coming} = <strong>${openingTomorrow.toFixed(1)}</strong></p>
-                    <p>Projected EOD tomorrow: ${openingTomorrow.toFixed(1)} - ${item.useTomorrow} = <strong>${leftoverTomorrow.toFixed(1)}</strong></p>
-                    <p class="final-order">To reach target of ${item.target}, order: ${orderAmount.toFixed(1)}</p>
-                </div>
-            `;
-            resultsOutput.innerHTML += resultHTML;
-        });
-
-        resultsContainer.style.display = 'block';
-        renderTable(); // Re-render table to show updated guide predictions
-    });
-
-    printBtn.addEventListener('click', () => {
-        const orderItems = document.querySelectorAll('.result-item');
-        let summaryHTML = `
-            <h1>Order Summary</h1>
-            <p>Date: ${new Date().toLocaleDateString('en-NZ')}</p>
-            <table id="print-summary-table">
-                <thead><tr><th>Item Name</th><th>Quantity to Order</th></tr></thead>
-                <tbody>
+        showToast("Import successful.");
+    } catch {
+        showToast("Import failed.");
+    }
+}
+/** --- UI Rendering --- */
+function fillColumnDaySelects() {
+    document.getElementById('col-day-select-today').innerHTML = daysOfWeek.map(day => `<option value="${day}"${selectedDayToday===day?' selected':''}>${day}</option>`).join('');
+    document.getElementById('col-day-select-tomorrow').innerHTML = daysOfWeek.map(day => `<option value="${day}"${selectedDayTomorrow===day?' selected':''}>${day}</option>`).join('');
+}
+function ensureUsagePerDay(itemName) {
+    if (!usagePerDay[itemName]) {
+        usagePerDay[itemName] = {};
+        daysOfWeek.forEach(day => usagePerDay[itemName][day] = "");
+    }
+}
+function getPredictiveUse(itemName, day) {
+    ensureUsagePerDay(itemName);
+    let val = usagePerDay[itemName][day];
+    return val !== "" ? val : "";
+}
+function getGuidePrediction(itemName) {
+    if (!usageHistory[itemName] || usageHistory[itemName].length === 0) return "No history";
+    const history = usageHistory[itemName].filter(val => val > 0);
+    if (history.length === 0) return "No history";
+    const sum = history.reduce((a, b) => a + b, 0);
+    return `Avg: ${(sum / history.length).toFixed(1)}`;
+}
+function renderTable() {
+    const tableBody = document.querySelector('#inventory-table tbody');
+    tableBody.innerHTML = '';
+    items.forEach((item, idx) => {
+        ensureUsagePerDay(item.name);
+        let useTodayVal = getPredictiveUse(item.name, selectedDayToday);
+        let useTomorrowVal = getPredictiveUse(item.name, selectedDayTomorrow);
+        if (useTodayVal === "") useTodayVal = item.useToday;
+        if (useTomorrowVal === "") useTomorrowVal = item.useTomorrow;
+        const guide = getGuidePrediction(item.name);
+        const rowHTML = `
+            <tr data-id="${item.id}">
+                <td>
+                    <label for="item-name-${item.id}" class="visually-hidden">Name</label>
+                    <input type="text" id="item-name-${item.id}" class="item-name" value="${item.name}" aria-label="Item name" required>
+                </td>
+                <td>
+                    <input type="number" min="0" id="item-received-${item.id}" class="item-received" value="${item.received}" required>
+                </td>
+                <td>
+                    <input type="number" min="0" id="item-instore-${item.id}" class="item-instore" value="${item.inStore}" required>
+                </td>
+                <td>
+                    <input type="number" min="0" id="item-coming-${item.id}" class="item-coming" value="${item.coming}" required>
+                </td>
+                <td>
+                    <input type="number" min="0" id="item-use-today-${item.id}" class="item-use-today" value="${useTodayVal}" required>
+                    <span class="guide">${guide}</span>
+                </td>
+                <td>
+                    <input type="number" min="0" id="item-use-tomorrow-${item.id}" class="item-use-tomorrow" value="${useTomorrowVal}" required>
+                    <span class="guide">${guide}</span>
+                </td>
+                <td>
+                    <input type="number" min="0" id="item-target-${item.id}" class="item-target" value="${item.target}" required>
+                </td>
+                <td>
+                    <button class="remove-item-btn" data-id="${item.id}">Remove</button>
+                </td>
+            </tr>
         `;
-        orderItems.forEach(item => {
-            const name = item.dataset.name;
-            const order = item.dataset.order;
-            if (parseFloat(order) > 0) { // Only add items that need ordering
-                 summaryHTML += `<tr><td>${name}</td><td>${order}</td></tr>`;
-            }
-        });
-        summaryHTML += `</tbody></table>`;
-        
-        printSummary.innerHTML = summaryHTML;
-        window.print();
+        tableBody.insertAdjacentHTML('beforeend', rowHTML);
     });
-
-    // --- Initial Load ---
+    let undoRow = document.getElementById('undo-row');
+    if (undoRow) undoRow.remove();
+    const t = document.createElement('tr');
+    t.id = 'undo-row';
+    t.innerHTML = `
+        <td colspan="6">
+            <span style="font-size:0.94em;">Keyboard shortcuts: <b>Ctrl+Z</b> Undo, <b>Ctrl+Y</b> Redo</span>
+        </td>
+        <td colspan="2">
+            <button class="undo-btn" id="undo-btn" aria-label="Undo last save">Undo</button>
+            <button class="undo-btn" id="redo-btn" aria-label="Redo last undo">Redo</button>
+        </td>
+    `;
+    tableBody.appendChild(t);
+    document.getElementById('undo-btn').onclick = undo;
+    document.getElementById('redo-btn').onclick = redo;
+}
+/** --- Event Handlers --- */
+document.getElementById('add-item-btn').onclick = function() {
+    const newItem = {
+        id: Date.now(),
+        name: 'New Item',
+        received: 0, inStore: 0, coming: 0, useToday: 0, useTomorrow: 0, target: 0
+    };
+    items.push(newItem);
+    saveState();
+    renderTable();
+};
+document.getElementById('inventory-table').addEventListener('click', (e) => {
+    if (e.target && e.target.classList.contains('remove-item-btn')) {
+        const idToRemove = parseInt(e.target.dataset.id);
+        if (confirm('Are you sure you want to remove this item?')) {
+            items = items.filter(item => item.id !== idToRemove);
+            saveState();
+            renderTable();
+        }
+    }
+});
+document.getElementById('col-day-select-today').addEventListener('change', function() {
+    selectedDayToday = this.value;
     renderTable();
 });
+document.getElementById('col-day-select-tomorrow').addEventListener('change', function() {
+    selectedDayTomorrow = this.value;
+    renderTable();
+});
+document.getElementById('inventory-table').addEventListener('input', debounce(function(e) {
+    if (!(e.target.classList.contains('item-use-today')
+        || e.target.classList.contains('item-use-tomorrow')
+        || e.target.classList.contains('item-received')
+        || e.target.classList.contains('item-instore')
+        || e.target.classList.contains('item-coming')
+        || e.target.classList.contains('item-target')
+        || e.target.classList.contains('item-name'))) return;
+    validateNumberInput(e.target);
+    const rows = document.querySelectorAll('#inventory-table tbody tr');
+    items = [];
+    rows.forEach(row => {
+        if (!row.dataset.id) return;
+        const item = {
+            id: parseInt(row.dataset.id),
+            name: row.querySelector('.item-name').value,
+            received: parseFloat(row.querySelector('.item-received').value) || 0,
+            inStore: parseFloat(row.querySelector('.item-instore').value) || 0,
+            coming: parseFloat(row.querySelector('.item-coming').value) || 0,
+            useToday: parseFloat(row.querySelector('.item-use-today').value) || 0,
+            useTomorrow: parseFloat(row.querySelector('.item-use-tomorrow').value) || 0,
+            target: parseFloat(row.querySelector('.item-target').value) || 0
+        };
+        items.push(item);
+        if (!usageHistory[item.name]) usageHistory[item.name] = [];
+        usageHistory[item.name].push(item.useToday, item.useTomorrow);
+        if (usageHistory[item.name].length > 10) usageHistory[item.name] = usageHistory[item.name].slice(-10);
+        ensureUsagePerDay(item.name);
+        let valToday = parseFloat(row.querySelector('.item-use-today').value);
+        let valTomorrow = parseFloat(row.querySelector('.item-use-tomorrow').value);
+        if (!isNaN(valToday)) usagePerDay[item.name][selectedDayToday] = valToday;
+        if (!isNaN(valTomorrow)) usagePerDay[item.name][selectedDayTomorrow] = valTomorrow;
+    });
+    saveState();
+}, 400));
+/** --- Bulk Action Buttons --- */
+document.getElementById('export-btn').onclick = exportData;
+document.getElementById('import-btn').onclick = () => document.getElementById('import-file').click();
+document.getElementById('import-file').onchange = function(e) {
+    if (this.files.length) {
+        const reader = new FileReader();
+        reader.onload = ev => importData(ev.target.result);
+        reader.readAsText(this.files[0]);
+    }
+};
+document.getElementById('reset-btn').onclick = resetToDefault;
+/** --- Keyboard Shortcuts --- */
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
+    if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+});
+/** --- Calculate Button --- */
+document.getElementById('calculate-btn').onclick = function() {
+    saveState();
+    const resultsOutput = document.getElementById('results-output');
+    resultsOutput.innerHTML = '';
+    let tableWorking = `
+        <table id="order-working-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Received Today</th>
+                    <th>In Store</th>
+                    <th>Coming Tomorrow</th>
+                    <th>Use Today</th>
+                    <th>Use Tomorrow</th>
+                    <th>Target</th>
+                    <th>Total Today</th>
+                    <th>Leftover After Today</th>
+                    <th>Opening Tomorrow</th>
+                    <th>Leftover After Tomorrow</th>
+                    <th>Order Needed</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    items.forEach(item => {
+        const getVal = v => Number.isFinite(v) ? v : 0;
+        const totalToday = getVal(item.received) + getVal(item.inStore);
+        const leftoverToday = totalToday - getPredictiveUse(item.name, selectedDayToday);
+        const openingTomorrow = leftoverToday + getVal(item.coming);
+        const leftoverTomorrow = openingTomorrow - getPredictiveUse(item.name, selectedDayTomorrow);
+        let orderAmount = item.target - leftoverTomorrow;
+        if (orderAmount < 0) orderAmount = 0;
+        tableWorking += `
+            <tr>
+                <td>${item.name}</td>
+                <td>${item.received}</td>
+                <td>${item.inStore}</td>
+                <td>${item.coming}</td>
+                <td>${getPredictiveUse(item.name, selectedDayToday)}</td>
+                <td>${getPredictiveUse(item.name, selectedDayTomorrow)}</td>
+                <td>${item.target}</td>
+                <td>${totalToday.toFixed(1)}</td>
+                <td>${leftoverToday.toFixed(1)}</td>
+                <td>${openingTomorrow.toFixed(1)}</td>
+                <td>${leftoverTomorrow.toFixed(1)}</td>
+                <td>${orderAmount.toFixed(1)}</td>
+            </tr>
+        `;
+        const resultHTML = `
+            <div class="result-item" data-name="${item.name}" data-order="${orderAmount.toFixed(1)}">
+                <p class="result-title">${item.name}</p>
+                <p>Total for today: ${item.received} + ${item.inStore} = <strong>${totalToday.toFixed(1)}</strong></p>
+                <p>Leftover after today: ${totalToday.toFixed(1)} - ${getPredictiveUse(item.name, selectedDayToday)} = <strong>${leftoverToday.toFixed(1)}</strong></p>
+                <p>Opening stock tomorrow: ${leftoverToday.toFixed(1)} + ${item.coming} = <strong>${openingTomorrow.toFixed(1)}</strong></p>
+                <p>Projected EOD tomorrow: ${openingTomorrow.toFixed(1)} - ${getPredictiveUse(item.name, selectedDayTomorrow)} = <strong>${leftoverTomorrow.toFixed(1)}</strong></p>
+                <p class="final-order">To reach target of ${item.target}, order: ${orderAmount.toFixed(1)}</p>
+            </div>
+        `;
+        resultsOutput.innerHTML += resultHTML;
+    });
+    tableWorking += `</tbody></table>`;
+    document.getElementById('order-working-container').innerHTML = tableWorking;
+    document.getElementById('results-container').style.display = 'block';
+    renderTable();
+};
+/** --- Print Button --- */
+document.getElementById('print-btn').onclick = function() {
+    const orderItems = document.querySelectorAll('.result-item');
+    let summaryHTML = `
+        <h1>Order Summary</h1>
+        <p>Date: ${new Date().toLocaleDateString('en-NZ')}</p>
+        <table id="print-summary-table">
+            <thead><tr><th>Item Name</th><th>Quantity to Order</th></tr></thead>
+            <tbody>
+    `;
+    orderItems.forEach(item => {
+        const name = item.dataset.name;
+        const order = item.dataset.order;
+        if (parseFloat(order) > 0) {
+             summaryHTML += `<tr><td>${name}</td><td>${order}</td></tr>`;
+        }
+    });
+    summaryHTML += `</tbody></table>`;
+    document.getElementById('print-summary').innerHTML = summaryHTML;
+    window.print();
+};
+/** --- Initial Load --- */
+loadState();
+fillColumnDaySelects();
+renderTable();
 </script>
 </body>
 </html>
