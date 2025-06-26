@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Calculator v2.0</title>
+    <title>Order Calculator v2.1</title>
     <style>
         :root {
             --primary-color: #007bff;
@@ -192,6 +192,15 @@
             color: #d9534f;
             font-size: 1.06em;
         }
+        .deal-suggestion {
+            background: #fff8e1;
+            color: #ad7200;
+            border-left: 4px solid #ffb400;
+            border-radius: 6px;
+            margin: 1em 0 2em 0;
+            padding: 0.7em 1em;
+            font-size: 1.02em;
+        }
         .print-only { 
             display: none; 
         }
@@ -219,32 +228,48 @@
             z-index: 9999;
             pointer-events: none;
         }
-        @media (max-width: 700px) {
-            html { font-size: 12px; }
-            .container { padding: 0.7em; }
-            .table-wrapper { overflow-x: auto; }
-            th, td { font-size: 0.93em; padding: 4px 2px; }
-            input, select { font-size: 0.93em; }
+        /* Modal styles for confirmation step */
+        .modal-bg {
+            display: none;
+            position: fixed;
+            z-index: 20000;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.3);
         }
-        @media print {
-            html { font-size: 13px; }
-            body > *:not(.print-only) {
-                display: none;
-            }
-            .print-only {
-                display: block;
-                padding: 2em;
-            }
-            #print-summary-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 12pt;
-            }
-            #print-summary-table th, #print-summary-table td {
-                border: 1px solid #333;
-                padding: 7px;
-                text-align: left;
-            }
+        .modal {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+            max-width: 400px;
+            width: 92vw;
+            margin: 12vh auto 0 auto;
+            padding: 1.5em 1em 1em 1em;
+            position: relative;
+        }
+        .modal h3 {
+            font-size: 1.2em;
+            margin: 0 0 0.6em 0;
+            color: #222;
+        }
+        .modal table {
+            width: 100%;
+            margin: 0 0 1em 0;
+            font-size: 1em;
+            border-collapse: collapse;
+        }
+        .modal th, .modal td {
+            border: none;
+            padding: 4px;
+            text-align: center;
+        }
+        .modal-btns {
+            display: flex;
+            gap: 1em;
+            justify-content: flex-end;
+            margin-top: 0.7em;
+        }
+        .modal input[type="number"] {
+            width: 70px;
         }
     </style>
 </head>
@@ -252,11 +277,27 @@
 <div class="container" role="main">
     <h1>Order Calculator</h1>
     <p>Adjust values as needed. All data will be saved automatically when you calculate the order.</p>
+    <div style="margin-bottom:1em;">
+        <label for="weekly-deal-select" style="font-weight:600;">Weekly Deal:</label>
+        <select id="weekly-deal-select" aria-label="Select weekly deal">
+            <option value="">-- None --</option>
+            <option value="1">Weekly Deal 1 - 2x BBQ Rodeo, 1x Small Fries, 1x Small Drinks</option>
+            <option value="2">Weekly Deal 2 - 1x Nuggets 10 Pack</option>
+            <option value="3">Weekly Deal 3 - 1x BBQ Bcn Dbl Cheeseburger RVM</option>
+            <option value="4">Weekly Deal 4 - 1x Whopper Jr, 1x Small Fries</option>
+            <option value="5">Weekly Deal 5 - 1x BK Chicken RVM</option>
+            <option value="6">Weekly Deal 6 - 2x Whopper, 1x Large Fries</option>
+            <option value="7">Weekly Deal 7 - 2x CM ChsBgr, 1x Small Fries, 1x Small Drinks</option>
+        </select>
+    </div>
+    <div id="deal-suggestion" class="deal-suggestion" style="display:none;"></div>
     <div class="bulk-actions">
         <button id="export-btn" class="bulk-action-btn" aria-label="Export data">Export Data</button>
         <input type="file" id="import-file" style="display:none" accept=".json" />
         <button id="import-btn" class="bulk-action-btn" aria-label="Import data">Import Data</button>
         <button id="reset-btn" class="bulk-action-btn" aria-label="Reset to default">Reset to Default</button>
+        <button id="import-po-btn" class="bulk-action-btn" aria-label="Import Purchase Order PDF">Import Purchase Order (PDF)</button>
+        <input type="file" id="import-po-file" style="display:none" accept="application/pdf"/>
     </div>
     <div class="table-wrapper" tabindex="0">
     <table id="inventory-table" aria-label="Order inventory table">
@@ -300,10 +341,33 @@
         </div>
     </div>
 </div>
+<!-- Confirmation Modal for Purchase Order Extraction -->
+<div id="po-modal-bg" class="modal-bg">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="po-modal-title">
+        <h3 id="po-modal-title">Confirm Received Buns</h3>
+        <form id="po-modal-form">
+            <table><thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Extracted Trays</th>
+                </tr>
+            </thead>
+            <tbody id="po-modal-tbody"></tbody>
+            </table>
+            <div class="modal-btns">
+                <button type="button" id="po-modal-cancel">Cancel</button>
+                <button type="submit" id="po-modal-confirm" style="background:var(--success-color)">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div id="toast"></div>
 <div id="print-summary" class="print-only"></div>
+<!-- pdf.js dependencies (minimal browser build) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js"></script>
 <script>
-/** --- Utilities: Toasts, Debounce, Validation --- */
+/** --- Utilities --- */
 function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.textContent = msg;
@@ -334,6 +398,120 @@ let usagePerDay = {};
 let undoStack = [], redoStack = [];
 let selectedDayToday = daysOfWeek[new Date().getDay()];
 let selectedDayTomorrow = daysOfWeek[(new Date().getDay()+1)%7];
+/** --- Weekly Deal Mapping --- */
+const dealItemMap = {
+    "1": { item: "4in", amount: 2, text: "2x 4in item" },
+    "3": { item: "4in", amount: 1, text: "1x 4in item" },
+    "4": { item: "4in", amount: 1, text: "1x 4in item" },
+    "5": { item: "Long", amount: 1, text: "1x Long item" },
+    "6": { item: "5in", amount: 2, text: "2x 5in item" },
+    "7": { item: "4in", amount: 2, text: "2x 4in item" }
+};
+const dealNames = {
+    "1": "Weekly Deal 1",
+    "2": "Weekly Deal 2",
+    "3": "Weekly Deal 3",
+    "4": "Weekly Deal 4",
+    "5": "Weekly Deal 5",
+    "6": "Weekly Deal 6",
+    "7": "Weekly Deal 7"
+};
+function updateDealSuggestion() {
+    const dealSelect = document.getElementById('weekly-deal-select');
+    const suggestionDiv = document.getElementById('deal-suggestion');
+    const selected = dealSelect.value;
+    if (selected && dealItemMap[selected]) {
+        const map = dealItemMap[selected];
+        const itemFound = items.some(it => it.name.trim().toLowerCase() === map.item.trim().toLowerCase());
+        let msg = `<b>Heads up!</b> ${dealNames[selected]} will be on.<br>`;
+        msg += `This deal uses <b>${map.text}</b> per deal purchase.`;
+        msg += itemFound
+            ? `<br>Consider increasing your order for <b>${map.item}</b> to ensure you have enough stock to last the week.`
+            : `<br><b>Note:</b> The item <b>${map.item}</b> is not found in your current list.`;
+        suggestionDiv.innerHTML = msg;
+        suggestionDiv.style.display = "";
+    } else {
+        suggestionDiv.style.display = "none";
+    }
+}
+/** --- PDF to Bun Received Import with Confirmation Step --- */
+const PO_BUN_MAP = {
+    "BK SES 4IN BUN 6": { item: "4in", tray: 30, label: "4in" },
+    "BK SES 5IN BUN 6": { item: "5in", tray: 16, label: "5in" },
+    "BK LNG RL 6":     { item: "Long", tray: 24, label: "Long" },
+    "BK GLAZED BUN SI":{ item: "Prem", tray: 24, label: "Prem" }
+};
+async function parsePOPdfAndFill(pdfData) {
+    if (!window.pdfjsLib) {
+        showToast("PDF.js missing!");
+        return;
+    }
+    showToast("Reading PDF...");
+    const pdf = await pdfjsLib.getDocument({data: pdfData}).promise;
+    let fullText = "";
+    for (let i = 1; i <= pdf.numPages; ++i) {
+        const page = await pdf.getPage(i);
+        const txt = await page.getTextContent();
+        fullText += txt.items.map(it => it.str).join("\n") + "\n";
+    }
+    let extracted = [];
+    Object.entries(PO_BUN_MAP).forEach(([poName, {item, tray, label}]) => {
+        const regex = new RegExp(`${poName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.*?(\\d+)\\s*$`, "m");
+        const match = fullText.match(regex);
+        if (match) {
+            const unitQty = parseInt(match[1]);
+            if (isNaN(unitQty)) return;
+            const trayQty = Math.round(unitQty / tray * 100) / 100;
+            extracted.push({
+                poName, item, label, trayQty
+            });
+        }
+    });
+    if (extracted.length) {
+        showPOConfirmModal(extracted);
+    } else {
+        showToast("No matching buns found in PO.");
+    }
+}
+function showPOConfirmModal(extractedArr) {
+    const modalBg = document.getElementById('po-modal-bg');
+    const tbody = document.getElementById('po-modal-tbody');
+    tbody.innerHTML = '';
+    extractedArr.forEach(({item, label, trayQty}) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${label}</td>
+            <td>
+                <input type="number" min="0" step="0.01" name="bun-${item}" value="${trayQty}" style="width:70px;" />
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    modalBg.style.display = "block";
+    document.getElementById('po-modal-cancel').onclick = function() {
+        modalBg.style.display = "none";
+    };
+    document.getElementById('po-modal-form').onsubmit = function(e) {
+        e.preventDefault();
+        let changed = false;
+        extractedArr.forEach(({item}) => {
+            const val = parseFloat(document.querySelector(`input[name="bun-${item}"]`).value);
+            if (!isNaN(val)) {
+                const itemRow = items.find(it => it.name.trim().toLowerCase() === item.toLowerCase());
+                if (itemRow) {
+                    itemRow.received = val;
+                    changed = true;
+                }
+            }
+        });
+        modalBg.style.display = "none";
+        if (changed) {
+            showToast("Received Today updated.");
+            renderTable();
+            saveState();
+        }
+    };
+}
 /** --- Storage Handling --- */
 function loadState() {
     items = JSON.parse(localStorage.getItem('inventoryState')) || JSON.parse(JSON.stringify(initialItems));
@@ -575,6 +753,22 @@ document.getElementById('import-file').onchange = function(e) {
     }
 };
 document.getElementById('reset-btn').onclick = resetToDefault;
+document.getElementById('weekly-deal-select').addEventListener('change', updateDealSuggestion);
+/** --- Purchase Order Import Button --- */
+document.getElementById('import-po-btn').onclick = () => document.getElementById('import-po-file').click();
+document.getElementById('import-po-file').onchange = function(e) {
+    if (!this.files.length) return;
+    const file = this.files[0];
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        try {
+            await parsePOPdfAndFill(new Uint8Array(ev.target.result));
+        } catch (err) {
+            showToast("Could not parse PDF.");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+};
 /** --- Keyboard Shortcuts --- */
 document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
@@ -671,6 +865,7 @@ document.getElementById('print-btn').onclick = function() {
 loadState();
 fillColumnDaySelects();
 renderTable();
+updateDealSuggestion();
 </script>
 </body>
 </html>
