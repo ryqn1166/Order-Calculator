@@ -603,7 +603,7 @@ function fillColumnDaySelects() {
 function ensureUsagePerDay(itemName) {
     if (!usagePerDay[itemName]) {
         usagePerDay[itemName] = {};
-        daysOfWeek.forEach(day => usagePerDay[itemName][day] = "";
+        daysOfWeek.forEach(day => usagePerDay[itemName][day] = "");
     }
 }
 function getPredictiveUse(itemName, day) {
